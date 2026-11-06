@@ -7,16 +7,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['DM Sans', 'sans-serif'],
+            display: ['Syne', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
           },
           colors: {
             canvas: '#0A0C10',
@@ -41,10 +41,15 @@
       overflow-x: hidden;
       background-color: #0A0C10;
       color: #F3F4F6;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       font-variant-numeric: tabular-nums;
     }
+    h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.25rem, 2vw, 1.5rem); line-height: 1.2; letter-spacing: -0.02em; }
+    h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.35rem, 2.2vw, 1.65rem); line-height: 1.25; letter-spacing: -0.02em; }
+    h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; line-height: 1.3; letter-spacing: -0.01em; }
     ::selection {
       background-color: rgba(245, 158, 11, 0.28);
       color: #FFFFFF;
@@ -57,12 +62,13 @@
       background-color: #12151C;
       border: 1px solid #222736;
       border-radius: 16px;
+      padding: 20px;
     }
     .iphone-now-playing {
-      background: rgba(10, 12, 16, 0.88);
+      background: rgba(10, 12, 16, 0.92);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 12px 16px;
     }
     @keyframes barBounce {
       0%, 100% { transform: scaleY(0.25); }
@@ -327,9 +333,9 @@
           </div>
         </div>
 
-        <!-- Collapsible Logs & 8-Track Details (Progressive Disclosure to eliminate clutter) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-          <details class="rounded-xl bg-[#0A0C10] border border-[#222736] p-3.5">
+        <!-- Collapsible Logs & 8-Track Details (Flat Divider Sections — Zero Nested Cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-[#222736]">
+          <details class="py-2">
             <summary class="cursor-pointer text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold select-none">
               8-Track Suno Stitch Breakdown (Copy A + Copy B)
             </summary>
@@ -338,11 +344,11 @@
             </div>
           </details>
 
-          <details class="rounded-xl bg-[#0A0C10] border border-[#222736] p-3.5">
+          <details class="py-2">
             <summary class="cursor-pointer text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold select-none">
               Live Kaggle T4 Worker Console Logs
             </summary>
-            <pre id="live-log-console" class="mt-3 h-48 overflow-y-auto rounded-lg bg-black/60 p-3 text-[11px] font-mono text-emerald-300/90 leading-relaxed whitespace-pre-wrap break-words">Waiting for job execution...</pre>
+            <pre id="live-log-console" class="mt-3 h-48 overflow-y-auto rounded-lg bg-[#0A0C10] p-3 text-[11px] font-mono text-emerald-300/90 leading-relaxed whitespace-pre-wrap break-words">Waiting for job execution...</pre>
           </details>
         </div>
       </div>
