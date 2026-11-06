@@ -168,10 +168,41 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"ok": True, "service": "hthh-kaggle-bridge", "project": FIRESTORE_PROJECT_ID}).encode("utf-8"))
+            return
+
+        # Serve static frontend from `public/` so http://localhost:8765 works even when ISP blocks *.web.app IP
+        public_dir = os.path.join(BASE_DIR, "public")
+        req_path = self.path.split("?")[0]
+        if req_path == "/" or req_path == "":
+            file_path = os.path.join(public_dir, "index.html")
         else:
-            self.send_response(404)
+            file_path = os.path.join(public_dir, req_path.lstrip("/"))
+
+        if os.path.isfile(file_path):
+            ext = os.path.splitext(file_path)[1].lower()
+            ctype = {
+                ".html": "text/html; charset=utf-8",
+                ".js": "application/javascript; charset=utf-8",
+                ".css": "text/css; charset=utf-8",
+                ".json": "application/json; charset=utf-8",
+                ".png": "image/png",
+                ".svg": "image/svg+xml"
+            }.get(ext, "application/octet-stream")
+            self.send_response(200)
             self._send_cors()
+            self.send_header("Content-Type", ctype)
             self.end_headers()
+            with open(file_path, "rb") as f:
+                self.wfile.write(f.read())
+        else:
+            # SPA Fallback
+            idx_path = os.path.join(public_dir, "index.html")
+            self.send_response(200)
+            self._send_cors()
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            with open(idx_path, "rb") as f:
+                self.wfile.write(f.read())
 
     def do_POST(self):
         if self.path == "/trigger":
