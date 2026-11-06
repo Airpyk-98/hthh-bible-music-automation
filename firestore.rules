@@ -1,0 +1,167 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{userId} and /users/{userId}/{document=**}
+    // Document ID: {userId} (Firebase Auth UID) and nested subdocuments
+    // Fields:
+    //   - style_prompt / stylePrompt: string (optional, <= 50000 chars) - Global Suno style prompt
+    //   - chapter_models / suno_models: map or list (optional) - Per-chapter Suno model overrides
+    //   - youtube_defaults / youtubeDefaults: map (optional) - YouTube upload defaults
+    //   - vault / encrypted_vault / ciphertext / iv / salt: string or map (optional) - Encrypted credentials vault
+    //   - updated_at / created_at: string, timestamp, or number (optional)
+    //
+    // Collection: /calendars/{rowId}
+    // Document ID: {rowId}
+    // Fields:
+    //   - book: string (optional, <= 500 chars) - Bible book name
+    //   - chapters: list, number, string, or map (optional) - Target chapter(s)
+    //   - status: string (optional, <= 200 chars) - Row production status
+    //   - job_id: string (optional, <= 500 chars) - Associated automation job ID
+    //   - youtube_url: string (optional, <= 5000 chars) - Published YouTube URL
+    //   - asset_url: string (optional, <= 5000 chars) - Hugging Face audio/video URL
+    //   - updated_at / created_at: string, timestamp, or number (optional)
+    //
+    // Collection: /automations/{jobId}
+    // Document ID: {jobId}
+    // Fields:
+    //   - progress: number (optional, 0..100) - Job execution percentage
+    //   - current_milestone: string (optional, <= 2000 chars) - Active pipeline milestone description
+    //   - status: string (optional, <= 200 chars) - Job status (queued, running, completed, failed, cancelled)
+    //   - updated_at / created_at: string, timestamp, or number (optional) - Last update time
+    //   - asset_url: string (optional, <= 5000 chars) - Final or intermediate media URL on Hugging Face
+    //   - asset_type: string (optional, <= 200 chars) - Media type (audio, video, image)
+    //   - logs_text: string (optional, <= 500000 chars) - Live execution log stream
+    //   - cancel_requested: bool (optional) - Cancellation flag from frontend
+    //   - youtube_url: string (optional, <= 5000 chars) - Uploaded YouTube video link
+    //   - track_urls: list or map (optional) - Generated per-chapter audio URLs
+    //   - image_url: string (optional, <= 5000 chars) - Generated thumbnail/cover image URL
+    //   - payload_cipher: string or map (optional, <= 500000 chars) - Ephemeral encrypted job payload (deleted after read)
+    //   - row_id: string or number (optional) - Associated calendar row identifier
+    //   - book: string (optional, <= 500 chars) - Bible book name
+    //   - chapters: list, number, string, or map (optional) - Target chapters
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidOptionalString(data, field, maxLen) {
+      return !(field in data) ||
+             data[field] == null ||
+             (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalBool(data, field) {
+      return !(field in data) ||
+             data[field] == null ||
+             (data[field] is bool);
+    }
+
+    function isValidOptionalTimestampOrString(data, field) {
+      return !(field in data) ||
+             data[field] == null ||
+             (data[field] is string && data[field].size() <= 200) ||
+             (data[field] is timestamp) ||
+             (data[field] is number);
+    }
+
+    // ===============================================================
+    // Domain Validators (Used in both create and update)
+    // ===============================================================
+
+    function isValidUserDoc(data) {
+      return data is map &&
+             data.keys().size() <= 100 &&
+             isValidOptionalString(data, 'style_prompt', 50000) &&
+             isValidOptionalString(data, 'stylePrompt', 50000) &&
+             isValidOptionalTimestampOrString(data, 'updated_at') &&
+             isValidOptionalTimestampOrString(data, 'created_at');
+    }
+
+    function isValidCalendarRow(data) {
+      return data is map &&
+             data.keys().size() <= 100 &&
+             isValidOptionalString(data, 'book', 500) &&
+             isValidOptionalString(data, 'status', 200) &&
+             isValidOptionalString(data, 'job_id', 500) &&
+             isValidOptionalString(data, 'last_job_id', 500) &&
+             isValidOptionalString(data, 'youtube_url', 5000) &&
+             isValidOptionalString(data, 'asset_url', 5000) &&
+             isValidOptionalTimestampOrString(data, 'updated_at') &&
+             isValidOptionalTimestampOrString(data, 'created_at');
+    }
+
+    function isValidAutomationJob(data) {
+      return data is map &&
+             data.keys().size() <= 100 &&
+             (!( 'progress' in data ) || data.progress == null || (data.progress is number && data.progress >= 0 && data.progress <= 100)) &&
+             isValidOptionalString(data, 'current_milestone', 2000) &&
+             isValidOptionalString(data, 'status', 200) &&
+             isValidOptionalTimestampOrString(data, 'updated_at') &&
+             isValidOptionalTimestampOrString(data, 'created_at') &&
+             isValidOptionalString(data, 'asset_url', 5000) &&
+             isValidOptionalString(data, 'asset_type', 200) &&
+             isValidOptionalString(data, 'logs_text', 500000) &&
+             isValidOptionalBool(data, 'cancel_requested') &&
+             isValidOptionalString(data, 'youtube_url', 5000) &&
+             (!( 'track_urls' in data ) || data.track_urls == null || (data.track_urls is string && data.track_urls.size() <= 100000) || (data.track_urls is list && data.track_urls.size() <= 500) || (data.track_urls is map && data.track_urls.keys().size() <= 500)) &&
+             isValidOptionalString(data, 'image_url', 5000) &&
+             (!( 'payload_cipher' in data ) || data.payload_cipher == null || (data.payload_cipher is string && data.payload_cipher.size() <= 500000) || (data.payload_cipher is map && data.payload_cipher.keys().size() <= 50)) &&
+             (!( 'row_id' in data ) || data.row_id == null || (data.row_id is string && data.row_id.size() <= 500) || (data.row_id is number)) &&
+             isValidOptionalString(data, 'book', 500) &&
+             (!( 'chapters' in data ) || data.chapters == null || (data.chapters is list && data.chapters.size() <= 500) || (data.chapters is number) || (data.chapters is string && data.chapters.size() <= 2000) || (data.chapters is map));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. User settings and encrypted credentials vault — strictly owner-only
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUserDoc(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      match /{document=**} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidUserDoc(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // 2. Content production calendar rows — authenticated read/create/delete, validated update for Kaggle REST worker
+    match /calendars/{rowId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidCalendarRow(request.resource.data);
+      allow update: if isValidCalendarRow(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    // 3. Automation jobs — accessed by authenticated frontend and Kaggle T4 REST worker
+    match /automations/{jobId} {
+      allow get, list: if true;
+      allow create, update: if isValidAutomationJob(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    // Default deny for all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

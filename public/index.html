@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTHH Music Automation — Bible Hip-Hop Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#090B10',
+            panel: '#11141D',
+            panelBorder: '#1E2434',
+            gold: '#F59E0B',
+            goldLight: '#FBBF24'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #090B10;
+      color: #F3F4F6;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-card {
+      background: rgba(17, 20, 29, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .iphone-pill {
+      background: rgba(9, 11, 16, 0.82);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.15);
+    }
+    @keyframes eqPulse {
+      0%, 100% { transform: scaleY(0.22); }
+      50% { transform: scaleY(0.95); }
+    }
+    .eq-bar {
+      animation: eqPulse 1.1s ease-in-out infinite;
+      transform-origin: bottom;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090B10; }
+    ::-webkit-scrollbar-thumb { background: #262E42; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #F59E0B; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-[#090B10]/90 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-display font-bold text-lg tracking-tight text-white">HTHH MUSIC AUTOMATION</h1>
+            <span class="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">Bible Hip-Hop Engine</span>
+          </div>
+          <p class="text-xs text-slate-400">KIE.AI Suno (8-Track Stitch) • ChatGPT 2.0 Visuals • iPhone Beat-Map • Kaggle T4 GPU</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden md:flex items-center gap-1 bg-[#11141D] p-1 rounded-xl border border-white/10">
+        <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="px-4 py-1.5 rounded-lg text-xs font-medium transition-all bg-amber-500 text-black font-semibold">
+          1. Content Calendar (CSV)
+        </button>
+        <button onclick="switchTab('monitor')" id="tab-btn-monitor" class="px-4 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-300 hover:text-white">
+          2. Live Studio & YouTube Push
+        </button>
+        <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-4 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-300 hover:text-white">
+          3. Master Settings & Vault
+        </button>
+      </nav>
+
+      <!-- Status & Google / YouTube Auth -->
+      <div class="flex items-center gap-3">
+        <div id="bridge-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-white/10 text-[11px] font-mono text-slate-300" title="Local Kaggle Kernel Bridge Status">
+          <span id="bridge-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="bridge-text">T4 Bridge Ready</span>
+        </div>
+
+        <button id="google-signin-btn" onclick="handleGoogleSignIn()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-semibold text-xs transition shadow">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
+            <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"/>
+            <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 21.4 7.4 24 12 24z"/>
+          </svg>
+          <span id="auth-btn-label">Sign in with Google (YouTube)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE TAB SWITCHER -->
+  <div class="md:hidden flex border-b border-white/10 bg-[#11141D] px-4 py-2 gap-2">
+    <button onclick="switchTab('calendar')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300">Calendar</button>
+    <button onclick="switchTab('monitor')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-white/5 text-slate-300">Studio / Preview</button>
+    <button onclick="switchTab('settings')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-white/5 text-slate-300">Settings</button>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- NOTIFICATION BANNER -->
+    <div id="toast-banner" class="hidden rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-200 flex items-center justify-between">
+      <span id="toast-message"></span>
+      <button onclick="document.getElementById('toast-banner').classList.add('hidden')" class="text-amber-400 hover:text-white font-bold ml-4">✕</button>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: CONTENT CALENDAR & CSV EXECUTION QUEUE                       -->
+    <!-- =================================================================== -->
+    <section id="tab-calendar" class="space-y-6">
+      <!-- Top Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-[11px] font-mono uppercase text-slate-400">Architecture</div>
+          <div class="mt-1 font-display font-bold text-base text-white">4 Chapters × 2 Copies = 8 Tracks</div>
+          <p class="mt-1 text-xs text-slate-400">Copy A (Ch 1–4) stitched first + Copy B (Ch 1–4) stitched at the end.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-[11px] font-mono uppercase text-slate-400">Lyrics Constraint</div>
+          <div class="mt-1 font-display font-bold text-base text-amber-400">4,850 – 4,950 Characters</div>
+          <p class="mt-1 text-xs text-slate-400">Enforced per Bible chapter via Google Gemini API + exact calibration.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-[11px] font-mono uppercase text-slate-400">Visual & Beat Map</div>
+          <div class="mt-1 font-display font-bold text-base text-sky-400">ChatGPT 2.0 + iPhone Display</div>
+          <p class="mt-1 text-xs text-slate-400">KIE.AI 16:9 Biblical artwork + live lower-screen iPhone beat spectrum.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono uppercase text-slate-400">Calendar Queue</span>
+            <span id="queue-count-badge" class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">0 Rows</span>
+          </div>
+          <div class="mt-2 flex items-center gap-2">
+            <button onclick="runNextPendingRow()" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold text-xs shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-1.5">
+              <span>▶ Run Next Pending Row</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSV Upload & Quick Row Generator Bar -->
+      <div class="glass-card rounded-2xl p-5 space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-white/10 pb-4">
+          <div>
+            <h2 class="font-display font-bold text-base text-white">Content Calendar CSV Queue</h2>
+            <p class="text-xs text-slate-400">Static CSV Headers: <code class="text-amber-300 font-mono bg-black/40 px-1.5 py-0.5 rounded">book,chapter_1,chapter_2,chapter_3,chapter_4</code> (If chapters are blank, 4 random distinct chapters from that Bible book are chosen automatically).</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <label class="cursor-pointer px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold transition flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span>Upload Content Calendar CSV</span>
+              <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="handleCsvUpload(event)" />
+            </label>
+            <button onclick="downloadSampleCsv()" class="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-medium transition">
+              ⬇ Download Sample CSV
+            </button>
+            <button onclick="clearCompletedRows()" class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-medium transition">
+              Clear Completed
+            </button>
+          </div>
+        </div>
+
+        <!-- Add Single Book + 4 Random Chapters Row -->
+        <div class="flex flex-wrap items-end gap-3 pt-1">
+          <div class="w-full sm:w-56">
+            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Bible Book</label>
+            <select id="quick-book-select" onchange="randomizeQuickChapters()" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"></select>
+          </div>
+          <div class="w-20">
+            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Ch. 1 <span id="lbl-m1" class="text-amber-400"></span></label>
+            <input type="number" id="quick-ch1" min="1" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white" />
+          </div>
+          <div class="w-20">
+            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Ch. 2 <span id="lbl-m2" class="text-amber-400"></span></label>
+            <input type="number" id="quick-ch2" min="1" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white" />
+          </div>
+          <div class="w-20">
+            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Ch. 3 <span id="lbl-m3" class="text-amber-400"></span></label>
+            <input type="number" id="quick-ch3" min="1" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white" />
+          </div>
+          <div class="w-20">
+            <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Ch. 4 <span id="lbl-m4" class="text-amber-400"></span></label>
+            <input type="number" id="quick-ch4" min="1" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white" />
+          </div>
+          <button onclick="randomizeQuickChapters()" class="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-amber-300 font-medium transition">
+            🎲 Roll 4 Random Chapters
+          </button>
+          <button onclick="addSingleCalendarRow()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition">
+            + Add Row to Calendar
+          </button>
+        </div>
+
+        <!-- Calendar Table -->
+        <div class="overflow-x-auto rounded-xl border border-white/10 mt-3">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-black/50 text-[11px] font-mono uppercase text-slate-400 border-b border-white/10">
+                <th class="py-3 px-4">#</th>
+                <th class="py-3 px-4">Bible Book</th>
+                <th class="py-3 px-4">Ch 1 <span id="th-m1" class="text-amber-400"></span></th>
+                <th class="py-3 px-4">Ch 2 <span id="th-m2" class="text-amber-400"></span></th>
+                <th class="py-3 px-4">Ch 3 <span id="th-m3" class="text-amber-400"></span></th>
+                <th class="py-3 px-4">Ch 4 <span id="th-m4" class="text-amber-400"></span></th>
+                <th class="py-3 px-4">Stitch Plan</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Execute (1 Row / Run)</th>
+              </tr>
+            </thead>
+            <tbody id="calendar-tbody" class="divide-y divide-white/5 text-xs">
+              <tr>
+                <td colspan="9" class="py-8 text-center text-slate-500">No rows in calendar yet. Upload a CSV or click "+ Add Row to Calendar" above.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: LIVE EXECUTION MONITOR, IPHONE BEAT-MAP PREVIEW & YOUTUBE    -->
+    <!-- =================================================================== -->
+    <section id="tab-monitor" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Live Progress, Milestones, Terminal & Track Breakdown (5 cols) -->
+        <div class="lg:col-span-5 space-y-5">
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-mono uppercase tracking-wider text-amber-400">Active Kaggle T4 Job</span>
+                <h3 id="live-job-title" class="font-display font-bold text-base text-white mt-0.5">No Active Execution</h3>
+              </div>
+              <span id="live-job-status-badge" class="px-2.5 py-1 rounded-full text-[11px] font-mono uppercase bg-slate-800 text-slate-300">IDLE</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-mono">
+                <span id="live-milestone-text" class="text-slate-300 truncate max-w-[82%]">Select a row in the Content Calendar and click Run.</span>
+                <span id="live-progress-pct" class="text-amber-400 font-bold">0%</span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-black/60 overflow-hidden border border-white/10 p-0.5">
+                <div id="live-progress-bar" class="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Action Controls (Cancel / Copy HF Link) -->
+            <div class="flex items-center gap-2.5 pt-1">
+              <button id="cancel-job-btn" onclick="cancelActiveJob()" disabled class="flex-1 py-2 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 disabled:opacity-40 text-red-300 border border-red-500/30 font-semibold text-xs transition">
+                🛑 Cancel Execution Immediately
+              </button>
+              <button id="copy-asset-btn" onclick="copyAssetUrl()" disabled class="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 text-slate-200 border border-white/10 font-mono text-xs transition">
+                📋 Copy Asset URL
+              </button>
+            </div>
+
+            <!-- Live Terminal Console -->
+            <div>
+              <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1.5">
+                <span>LIVE KAGGLE T4 / FIRESTORE LOG STREAM</span>
+                <span id="live-job-id-label" class="text-slate-500">job: none</span>
+              </div>
+              <pre id="live-log-console" class="h-64 overflow-y-auto rounded-xl bg-[#06070B] border border-white/10 p-3 text-[11px] font-mono text-emerald-300/90 leading-relaxed whitespace-pre-wrap">Waiting for job execution...</pre>
+            </div>
+          </div>
+
+          <!-- 8-Track Suno Stitch Inspector -->
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-display font-bold text-sm text-white">8-Track Suno Stitch Breakdown</h4>
+              <span class="text-[11px] font-mono text-amber-400">Copy A (1–4) + Copy B (1–4)</span>
+            </div>
+            <div id="track-breakdown-list" class="space-y-2 text-xs text-slate-400">
+              <p class="text-slate-500 italic">Per-chapter character counts (4,850–4,950) and Copy A / Copy B audio links will appear here as each chapter finishes.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: HTML5 Video Player + iPhone Beat-Map Preview + YouTube Upload (7 cols) -->
+        <div class="lg:col-span-7 space-y-5">
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-display font-bold text-base text-white">Master Video Preview & iPhone Beat-Map</h3>
+                <p class="text-xs text-slate-400">Streamed directly from Hugging Face Datasets (<code class="text-amber-300 font-mono">pearlyoscar/hthh-bible-music-assets</code>)</p>
+              </div>
+              <a id="direct-download-link" href="#" target="_blank" class="hidden px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold">
+                ⬇ Open Raw MP4
+              </a>
+            </div>
+
+            <!-- Video Player / Live Visual Preview Container -->
+            <div class="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#050609] border border-white/15 shadow-2xl flex items-center justify-center">
+              <video id="master-video-player" controls class="hidden w-full h-full object-contain bg-black"></video>
+
+              <!-- Interactive Preview Mockup shown before final MP4 arrives -->
+              <div id="video-placeholder-stage" class="relative w-full h-full flex flex-col justify-between p-6 bg-cover bg-center" style="background-image: radial-gradient(circle at 50% 35%, rgba(245, 158, 11, 0.22), rgba(9, 11, 16, 0.96));">
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-1 rounded-full bg-black/60 border border-white/10 text-[10px] font-mono uppercase tracking-widest text-amber-300">
+                    ChatGPT 2.0 Background Layer (16:9)
+                  </span>
+                  <span class="px-2.5 py-1 rounded-full bg-black/60 border border-white/10 text-[10px] font-mono text-slate-300">
+                    1920 × 1080 • 8 Stitched Tracks
+                  </span>
+                </div>
+
+                <div class="my-auto text-center space-y-2 max-w-md mx-auto">
+                  <p id="stage-book-heading" class="font-display font-bold text-2xl text-white tracking-tight">BIBLE HIP-HOP VISUALIZER STAGE</p>
+                  <p class="text-xs text-slate-300">When a job finishes, the rendered MP4 video loads automatically inside this HTML5 player.</p>
+                </div>
+
+                <!-- Lower Screen iPhone Beat-Map Display Preview -->
+                <div class="iphone-pill mx-auto w-full max-w-xl rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-bold text-xs shrink-0">
+                      ♫
+                    </div>
+                    <div class="truncate">
+                      <div class="text-[11px] font-semibold text-white truncate" id="iphone-pill-title">HTHH Bible Cipher • 8-Track Master</div>
+                      <div class="text-[10px] font-mono text-amber-400">iPhone Dynamic Beat-Map Overlay</div>
+                    </div>
+                  </div>
+                  <!-- Animated Equalizer Bars -->
+                  <div class="flex items-end gap-1 h-8 shrink-0">
+                    <span class="w-1 bg-amber-400 rounded-full h-7 eq-bar" style="animation-delay:0.0s"></span>
+                    <span class="w-1 bg-sky-400 rounded-full h-5 eq-bar" style="animation-delay:0.2s"></span>
+                    <span class="w-1 bg-amber-400 rounded-full h-8 eq-bar" style="animation-delay:0.4s"></span>
+                    <span class="w-1 bg-amber-300 rounded-full h-4 eq-bar" style="animation-delay:0.1s"></span>
+                    <span class="w-1 bg-sky-400 rounded-full h-7 eq-bar" style="animation-delay:0.3s"></span>
+                    <span class="w-1 bg-amber-400 rounded-full h-6 eq-bar" style="animation-delay:0.5s"></span>
+                    <span class="w-1 bg-amber-500 rounded-full h-8 eq-bar" style="animation-delay:0.15s"></span>
+                    <span class="w-1 bg-sky-400 rounded-full h-5 eq-bar" style="animation-delay:0.35s"></span>
+                    <span class="w-1 bg-amber-400 rounded-full h-7 eq-bar" style="animation-delay:0.25s"></span>
+                    <span class="w-1 bg-amber-300 rounded-full h-4 eq-bar" style="animation-delay:0.45s"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Push to YouTube Channel Panel -->
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+              <div>
+                <h3 class="font-display font-bold text-base text-white flex items-center gap-2">
+                  <span class="text-red-500">▶</span> Push Final Video to Signed-In YouTube Channel
+                </h3>
+                <p class="text-xs text-slate-400">Pre-populated from your saved Default Upload Settings. Edit per upload if desired.</p>
+              </div>
+              <span id="yt-auth-indicator" class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 border border-red-500/30">
+                Sign in with Google to Upload
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">YouTube Video Title</label>
+                <input type="text" id="yt-upload-title" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white" placeholder="e.g. Book of Psalms (Chapters 1, 23, 91, 150) | Pure Bible Hip-Hop" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Privacy Status</label>
+                <select id="yt-upload-privacy" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white">
+                  <option value="public">Public</option>
+                  <option value="unlisted">Unlisted</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">YouTube Description</label>
+              <textarea id="yt-upload-description" rows="3" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">YouTube Tags (comma-separated)</label>
+              <input type="text" id="yt-upload-tags" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+            </div>
+
+            <div class="flex items-center justify-between gap-3 pt-1">
+              <div id="yt-upload-status" class="text-xs font-mono text-slate-400 truncate">Ready when video is completed.</div>
+              <button id="yt-push-btn" onclick="pushVideoToYouTube()" class="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs shadow-lg shadow-red-600/25 transition flex items-center gap-2 shrink-0">
+                <span>🚀 Push Video to YouTube Channel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: MASTER SETTINGS, PER-CHAPTER SUNO MODELS & SECURE VAULT      -->
+    <!-- =================================================================== -->
+    <section id="tab-settings" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-display font-bold text-xl text-white">Master Automation Settings & Encrypted Credential Vault</h2>
+          <p class="text-xs text-slate-400">All settings are saved persistently to your account and encrypted before being dispatched to the Kaggle T4 worker.</p>
+        </div>
+        <button onclick="saveAllUserSettings()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition">
+          💾 Save All Settings
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Card 1: Master System Prompt & Per-Chapter Suno Models -->
+        <div class="glass-card rounded-2xl p-5 space-y-4">
+          <div class="border-b border-white/10 pb-3">
+            <h3 class="font-display font-bold text-base text-amber-400">1. Master AI System Prompt & Per-Chapter Suno Models</h3>
+            <p class="text-xs text-slate-400">Guides Google Gemini on how to write the 4,850–4,950 char lyrics, what Suno style & negative tags to use, and how the ChatGPT 2.0 background artwork should look.</p>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Master Producer System Prompt (Lyrics + Suno Style + Visual Theme Guide)</label>
+            <textarea id="set-master-prompt" rows="6" class="w-full rounded-xl bg-[#090B10] border border-white/15 p-3 text-xs text-white leading-relaxed focus:border-amber-500 focus:outline-none"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Default Suno Style Prompt</label>
+              <input type="text" id="set-default-style" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Default Suno Negative Tags</label>
+              <input type="text" id="set-negative-tags" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white" />
+            </div>
+          </div>
+
+          <!-- Per-Chapter Suno Model Selectors -->
+          <div class="pt-2">
+            <label class="block text-[11px] font-mono uppercase text-amber-400 mb-2">Per-Chapter Suno Model Selection (Applied to Each CSV Column)</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <span class="block text-[10px] font-mono text-slate-400 mb-1">Chapter 1 Model</span>
+                <select id="set-model-ch1" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white">
+                  <option value="V4_5PLUS">V4_5PLUS (5k chars)</option>
+                  <option value="V4_5">V4_5 (5k chars)</option>
+                  <option value="V4_5ALL">V4_5ALL (5k chars)</option>
+                  <option value="V5">V5 (Latest)</option>
+                  <option value="V4">V4</option>
+                  <option value="V3_5">V3_5</option>
+                </select>
+              </div>
+              <div>
+                <span class="block text-[10px] font-mono text-slate-400 mb-1">Chapter 2 Model</span>
+                <select id="set-model-ch2" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white">
+                  <option value="V4_5PLUS">V4_5PLUS (5k chars)</option>
+                  <option value="V4_5">V4_5 (5k chars)</option>
+                  <option value="V4_5ALL">V4_5ALL (5k chars)</option>
+                  <option value="V5">V5 (Latest)</option>
+                  <option value="V4">V4</option>
+                  <option value="V3_5">V3_5</option>
+                </select>
+              </div>
+              <div>
+                <span class="block text-[10px] font-mono text-slate-400 mb-1">Chapter 3 Model</span>
+                <select id="set-model-ch3" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white">
+                  <option value="V4_5PLUS">V4_5PLUS (5k chars)</option>
+                  <option value="V4_5">V4_5 (5k chars)</option>
+                  <option value="V4_5ALL">V4_5ALL (5k chars)</option>
+                  <option value="V5">V5 (Latest)</option>
+                  <option value="V4">V4</option>
+                  <option value="V3_5">V3_5</option>
+                </select>
+              </div>
+              <div>
+                <span class="block text-[10px] font-mono text-slate-400 mb-1">Chapter 4 Model</span>
+                <select id="set-model-ch4" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-2.5 py-2 text-xs font-mono text-white">
+                  <option value="V4_5PLUS">V4_5PLUS (5k chars)</option>
+                  <option value="V4_5">V4_5 (5k chars)</option>
+                  <option value="V4_5ALL">V4_5ALL (5k chars)</option>
+                  <option value="V5">V5 (Latest)</option>
+                  <option value="V4">V4</option>
+                  <option value="V3_5">V3_5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Secure API Credentials Vault & Default YouTube Metadata -->
+        <div class="space-y-6">
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+              <div>
+                <h3 class="font-display font-bold text-base text-emerald-400">2. Secure API Keys & Kaggle Compute Vault</h3>
+                <p class="text-xs text-slate-400">Encrypted with SHA-256 stream cipher prior to dispatch; wiped from Firestore immediately upon worker read.</p>
+              </div>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">AES/SHA256 PAYLOAD</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">KIE.AI API Key (Suno + ChatGPT 2.0)</label>
+                <input type="password" id="vault-kie-key" placeholder="kie_..." class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Google Gemini API Key (Free Credit)</label>
+                <input type="password" id="vault-gemini-key" placeholder="AIza..." class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Kaggle Username</label>
+                <input type="text" id="vault-kaggle-user" placeholder="ikechukwuebiringa" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Kaggle API Token / Key</label>
+                <input type="password" id="vault-kaggle-key" placeholder="Kaggle API Token" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Hugging Face Write Token (Optional Override — Default Configured)</label>
+                <input type="password" id="vault-hf-token" placeholder="hf_... (Leave blank to use default connected dataset token)" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Default YouTube Upload Settings -->
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="border-b border-white/10 pb-2">
+              <h3 class="font-display font-bold text-base text-red-400">3. Default YouTube Channel Upload Template</h3>
+              <p class="text-xs text-slate-400">Supports <code class="text-amber-300 font-mono">{book}</code> and <code class="text-amber-300 font-mono">{chapters}</code> placeholders.</p>
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Default Upload Title Template</label>
+              <input type="text" id="set-yt-title" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Default Upload Description Template</label>
+              <textarea id="set-yt-desc" rows="3" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs text-white"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-300 mb-1">Default Upload Tags (comma-separated)</label>
+              <input type="text" id="set-yt-tags" class="w-full rounded-xl bg-[#090B10] border border-white/15 px-3 py-2 text-xs font-mono text-white" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
