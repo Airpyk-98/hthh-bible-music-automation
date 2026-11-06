@@ -8,7 +8,9 @@
 
 ## 2. Infrastructure & Live Endpoints
 - **Firebase Project ID**: `hthh-music-auto-2026`
-- **Live Frontend URL**: `https://hthh-music-auto-2026.web.app`
+- **Live Vercel Production URL (Primary — Zero ISP Block)**: `https://hthh-bible-music-studio-ikechukwu-paul-ebiringas-projects.vercel.app`
+- **Live Firebase Hosting URL**: `https://hthh-music-auto-2026.web.app`
+- **Local Web + Kaggle T4 Bridge URL**: `http://localhost:8765`
 - **Firestore Collections**:
   - `/calendars/{rowId}` — Content Calendar CSV rows (`book`, `chapters` [4 chapters], `status`, `asset_url`, `last_job_id`)
   - `/automations/{jobId}` — Real-time job execution state, progress %, milestone text, live log console, cancellation flag, 8-track metadata, and Hugging Face video URL
