@@ -577,6 +577,7 @@ window.executeSingleRow = async function (rowId) {
     logs_text: `[Init] Created job ${jobId} for ${row.book} Chapters ${chs.join(", ")}\n[Security] Encrypted KIE.AI, Gemini & Kaggle credentials into ephemeral cipher.`,
     cancel_requested: false,
     payload_cipher: cipherB64,
+    bridge_token: passphrase,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

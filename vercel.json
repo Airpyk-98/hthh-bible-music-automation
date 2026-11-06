@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "public": true,
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/api/trigger", "destination": "/api/trigger" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

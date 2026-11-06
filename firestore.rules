@@ -121,6 +121,7 @@ service cloud.firestore {
              isValidOptionalString(data, 'youtube_url', 5000) &&
              (!( 'track_urls' in data ) || data.track_urls == null || (data.track_urls is string && data.track_urls.size() <= 100000) || (data.track_urls is list && data.track_urls.size() <= 500) || (data.track_urls is map && data.track_urls.keys().size() <= 500)) &&
              isValidOptionalString(data, 'image_url', 5000) &&
+             isValidOptionalString(data, 'bridge_token', 500) &&
              (!( 'payload_cipher' in data ) || data.payload_cipher == null || (data.payload_cipher is string && data.payload_cipher.size() <= 500000) || (data.payload_cipher is map && data.payload_cipher.keys().size() <= 50)) &&
              (!( 'row_id' in data ) || data.row_id == null || (data.row_id is string && data.row_id.size() <= 500) || (data.row_id is number)) &&
              isValidOptionalString(data, 'book', 500) &&
