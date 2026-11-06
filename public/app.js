@@ -148,15 +148,22 @@ window.switchTab = function (tabName) {
   ["calendar", "monitor", "settings"].forEach((t) => {
     const sec = document.getElementById(`tab-${t}`);
     const btn = document.getElementById(`tab-btn-${t}`);
+    const mob = document.getElementById(`mob-nav-${t}`);
     if (t === tabName) {
       sec.classList.remove("hidden");
       if (btn) {
-        btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-amber-500 text-black";
+        btn.className = "px-4 py-2 rounded-lg text-sm font-semibold transition bg-amber-500 text-black";
+      }
+      if (mob) {
+        mob.className = "flex flex-col items-center justify-center gap-1 text-amber-400 font-semibold text-xs";
       }
     } else {
       sec.classList.add("hidden");
       if (btn) {
-        btn.className = "px-4 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-300 hover:text-white";
+        btn.className = "px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:text-white";
+      }
+      if (mob) {
+        mob.className = "flex flex-col items-center justify-center gap-1 text-slate-400 font-medium text-xs";
       }
     }
   });
@@ -449,53 +456,65 @@ window.clearCompletedRows = async function () {
 };
 
 function renderCalendarTable() {
-  const tbody = document.getElementById("calendar-tbody");
+  const listEl = document.getElementById("calendar-list");
   const badge = document.getElementById("queue-count-badge");
-  badge.textContent = `${calendarRows.length} Row${calendarRows.length === 1 ? "" : "s"}`;
+  if (badge) badge.textContent = `${calendarRows.length} Row${calendarRows.length === 1 ? "" : "s"}`;
+  if (!listEl) return;
 
   if (calendarRows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500">No rows in calendar yet. Upload a CSV or click "+ Add Row to Calendar" above.</td></tr>`;
+    listEl.innerHTML = `
+      <div class="surface-card p-8 text-center text-sm text-slate-400">
+        No rows in queue yet. Click "Import CSV" or open "+ Add Bible Book Row Manually" above.
+      </div>
+    `;
     return;
   }
 
   const models = userSettings.chapter_models || ["V4_5PLUS", "V4_5PLUS", "V4_5PLUS", "V4_5PLUS"];
 
-  tbody.innerHTML = calendarRows.map((row, idx) => {
+  listEl.innerHTML = calendarRows.map((row, idx) => {
     const chs = Array.isArray(row.chapters) ? row.chapters : [1, 2, 3, 4];
     const statusColors = {
-      pending: "bg-slate-800 text-slate-300 border-white/10",
-      running: "bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse",
-      completed: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
-      failed: "bg-red-500/20 text-red-300 border-red-500/40"
+      pending: "bg-white/5 text-slate-300 border-white/10",
+      running: "bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse",
+      completed: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+      failed: "bg-red-500/15 text-red-300 border-red-500/30"
     };
     const stClass = statusColors[row.status] || statusColors.pending;
 
     return `
-      <tr class="hover:bg-white/[0.02] transition">
-        <td class="py-3 px-4 font-mono text-slate-400">${idx + 1}</td>
-        <td class="py-3 px-4 font-display font-bold text-white">${row.book}</td>
-        <td class="py-3 px-4 font-mono text-amber-300">Ch. ${chs[0]} <span class="text-[10px] text-slate-500">${models[0]}</span></td>
-        <td class="py-3 px-4 font-mono text-amber-300">Ch. ${chs[1]} <span class="text-[10px] text-slate-500">${models[1]}</span></td>
-        <td class="py-3 px-4 font-mono text-amber-300">Ch. ${chs[2]} <span class="text-[10px] text-slate-500">${models[2]}</span></td>
-        <td class="py-3 px-4 font-mono text-amber-300">Ch. ${chs[3]} <span class="text-[10px] text-slate-500">${models[3]}</span></td>
-        <td class="py-3 px-4 text-[11px] font-mono text-slate-400">Copy A (1-4) + Copy B (1-4)</td>
-        <td class="py-3 px-4">
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase border ${stClass}">${row.status || "pending"}</span>
-        </td>
-        <td class="py-3 px-4 text-right space-x-1.5">
+      <div class="surface-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-2 min-w-0">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="text-xs font-mono text-slate-400">#${idx + 1}</span>
+            <h3 class="font-display font-bold text-base sm:text-lg text-white">${row.book}</h3>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase border ${stClass}">${row.status || "pending"}</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            ${chs.map((c, i) => `
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0A0C10] border border-[#222736] text-xs font-mono text-slate-200">
+                <strong class="text-amber-400">Ch.${c}</strong>
+                <span class="text-[11px] text-slate-400">${models[i] || "V4_5PLUS"}</span>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
           ${
             row.asset_url
-              ? `<button onclick="openJobPreview('${row.last_job_id || ""}', '${row.asset_url}', '${row.book}', '${chs.join(", ")}')" class="px-2.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 font-semibold text-[11px]">🎬 Preview / YouTube</button>`
+              ? `<button onclick="openJobPreview('${row.last_job_id || ""}', '${row.asset_url}', '${row.book}', '${chs.join(", ")}')" class="min-h-[40px] px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 font-semibold text-xs transition">Preview &amp; YouTube</button>`
               : ""
           }
-          <button onclick="executeSingleRow('${row.id}')" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] transition shadow">
-            ▶ Run Row
+          <button onclick="executeSingleRow('${row.id}')" class="min-h-[40px] px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+            <span>Run Row</span>
           </button>
-          <button onclick="deleteCalendarRow('${row.id}')" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-300 text-[11px]">
-            ✕
+          <button onclick="deleteCalendarRow('${row.id}')" aria-label="Remove row" class="min-h-[40px] px-3 py-2 rounded-xl bg-[#181C26] hover:bg-red-500/15 text-slate-400 hover:text-red-300 border border-[#222736] text-xs transition">
+            Remove
           </button>
-        </td>
-      </tr>
+        </div>
+      </div>
     `;
   }).join("");
 }
@@ -525,7 +544,7 @@ window.executeSingleRow = async function (rowId) {
 
   if (!kieKey || !geminiKey) {
     window.switchTab("settings");
-    showToast("⚠️ Please enter your KIE.AI API Key and Google Gemini API Key in Settings -> Secure Vault before running a row!");
+    showToast(`Please enter your KIE.AI API Key and Google Gemini API Key in Settings before running a row.`);
     return;
   }
 
@@ -589,7 +608,7 @@ window.executeSingleRow = async function (rowId) {
     });
     const resData = await resp.json();
     if (resData.ok) {
-      showToast(`🚀 Pushed job ${jobId} to Kaggle T4 GPU (${resData.kernel_slug})!`);
+      showToast(`Pushed job ${jobId} to Kaggle T4 GPU (${resData.kernel_slug})!`);
     } else {
       showToast(`Kaggle push warning: ${resData.error}`);
     }
@@ -722,7 +741,7 @@ window.cancelActiveJob = async function () {
     current_milestone: "Cancellation requested by user — halting Kaggle worker...",
     updated_at: new Date().toISOString()
   });
-  showToast("🛑 Cancellation signal sent to Firestore & Kaggle T4 Watchdog.");
+  showToast("Cancellation signal sent to Firestore & Kaggle T4 Watchdog.");
 };
 
 window.copyAssetUrl = function () {
@@ -812,8 +831,8 @@ window.pushVideoToYouTube = async function () {
 
     const ytData = await uploadResp.json();
     const ytLink = `https://youtu.be/${ytData.id}`;
-    statusEl.innerHTML = `✅ Published to YouTube: <a href="${ytLink}" target="_blank" class="text-emerald-400 underline">${ytLink}</a>`;
-    showToast(`🎉 Video uploaded to your YouTube channel: ${ytLink}`);
+    statusEl.innerHTML = `Published to YouTube: <a href="${ytLink}" target="_blank" class="text-emerald-400 underline">${ytLink}</a>`;
+    showToast(`Video uploaded to your YouTube channel: ${ytLink}`);
 
     if (activeJobId) {
       await updateDoc(doc(db, "automations", activeJobId), {
